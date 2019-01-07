@@ -19,3 +19,96 @@
 .publication_label_link {
 	color: white;
 }
+
+.comment-input {
+	margin-top: 15%;
+	margin-bottom: 5%;
+}
+
+.pub_details .accordion {
+	margin-bottom:5px;
+}
+.log {
+	border: 1px solid #e6e6e6;
+	background: #fefefe;
+	padding: 5px 16px;
+}
+
+.log_timestamp {
+	color: #a8a8a8;
+	font-size:90%
+}
+
+.log_user {
+	color: #000000;
+	font-size:90%;
+	font-weight: 500;
+}
+
+.log_item {
+	margin: 10px 0;
+	position: relative;
+}
+.log_comment {
+	color: #1a1a1a;
+	background-color: #ededed;
+	border-radius: 5px;
+	padding: 4px 12px;
+	font-size: 80%;
+	margin-top: 12px;
+}
+.log_comment::after {
+	content: '';
+    position: absolute;
+    left: 18px;
+    width: 0;
+    height: 0;
+    border: 8px solid transparent;
+    border-bottom-color: #ededed;
+    border-top: 0;
+    margin-left: -8px;
+    margin-top: -12px;
+}
+
+.fi-target, .fi-alert, .fi-prohibited {
+	font-size: 140%;
+	margin-right: 5px;
+}
+.fi-target { color: #3adb76; }
+.fi-alert { color: #ffae00; }
+.fi-prohibited { color: #cc4b37; }
+
+.log_item.status_updated {
+	font-size: 90%;
+}
+
+
+.log_item.status_update {
+	font-size: 70%;
+	color: #999;
+	text-align: center;
+
+	position: relative;
+    z-index: 1;
+}
+.log_item.status_update::before {
+    border-top: 1px solid #dfdfdf;
+    content:"";
+    margin: 0 auto; /* this centers the line to the full width specified */
+    position: absolute; /* positioning must be absolute here, and relative positioning must be applied to the parent */
+    top: 50%; left: 0; right: 0; bottom: 0;
+    width: 100%;
+    z-index: -1;
+}
+
+.log_item.status_update > span {
+    /* to hide the lines from behind the text, you have to set the background color the same as the container */
+    background: #fff;
+    padding: 0 15px;
+	margin-left: 20px;
+}
+.log_item.status_update .log_timestamp {
+	font-weight: bold;
+	font-size: 100%;
+	padding-left: 8px;
+}

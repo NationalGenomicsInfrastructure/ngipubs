@@ -14,7 +14,7 @@ class NGIpublications {
 		return $add;
 	}
 
-	public function updatePubStatus($publication_id,$status,$user,$comment) {
+	public function updatePubStatus($publication_id,$status,$user) {
 		global $DB;
 		if($publication_id=filter_var($publication_id, FILTER_VALIDATE_INT)) {
 			if($check=sql_fetch("SELECT * FROM publications WHERE id='$publication_id' LIMIT 1")) {
@@ -23,12 +23,26 @@ class NGIpublications {
 					if($status=='maybe') {
 						$reset=sql_query("UPDATE publications SET reservation_user=NULL, reservation_timestamp=NULL WHERE id='$publication_id'");
 					}
-					$this->addLog($publication_id,$status,$comment,'status_updated');
+					$this->addLog($publication_id,$status,"Status updated to '$status'",'status_updated');
 
 					return TRUE;
 				} else {
 					return FALSE;
 				}
+			} else {
+				return FALSE;
+			}
+		} else {
+			return FALSE;
+		}
+	}
+
+	public function commentPublication($publication_id,$user,$comment) {
+		global $DB;
+		if($publication_id=filter_var($publication_id, FILTER_VALIDATE_INT)) {
+			if($check=sql_fetch("SELECT * FROM publications WHERE id='$publication_id' LIMIT 1")) {
+				$this->addLog($publication_id,'',$comment,'comment');
+				return TRUE;
 			} else {
 				return FALSE;
 			}
@@ -627,6 +641,7 @@ class NGIpublications {
 			$accordion->addAccordion('Details',$detailed_content->output());
 
 			$details=new htmlElement('div');
+			$details->set('class','pub_details');
 			$details->set('text',$accordion->render());
 
 			$log_rows=sql_query("SELECT * FROM publications_logs JOIN publications ON publications_logs.publication_id=publications.id WHERE publication_id=".$publication['data']['id']);
@@ -638,13 +653,7 @@ class NGIpublications {
 				}
 			}
 
-			$log_table=$this->formatLog($log_list);
-
-			$log_accordion=new zurbAccordion(TRUE,TRUE);
-			$log_accordion->addAccordion('Log Details',$log_table);
-
-			$log_details=new htmlElement('div');
-			$log_details->set('text',$log_accordion->render());
+			$log_details=$this->formatLog($log_list);
 
 			$tools_verify=new htmlElement('span');
 			$tools_verify->set('class','tiny success button expanded verify_button');
@@ -661,11 +670,17 @@ class NGIpublications {
 			$tools_discard->set('id','discard-'.$publication['data']['id']);
 			$tools_discard->set('text','Discard');
 
-			$tools_comment=new htmlElement('input');
+			$tools_comment=new htmlElement('textarea');
 			$tools_comment->set('type', 'text');
 			$tools_comment->set('class', 'comment-input');
 			$tools_comment->set('id','comment-'.$publication['data']['id']);
+			$tools_comment->set('rows', "2");
 			$tools_comment->set('placeholder','Comment');
+
+			$tools_comment_btn=new htmlElement('span');
+			$tools_comment_btn->set('class','primary button tiny expanded comment_button');
+			$tools_comment_btn->set('id','comment-'.$publication['data']['id']);
+			$tools_comment_btn->set('text','Add Comment');
 
 			$main->inject($title);
 			$main->inject($ref);
@@ -676,6 +691,7 @@ class NGIpublications {
 			$tools->inject($tools_maybe);
 			$tools->inject($tools_discard);
 			$tools->inject($tools_comment);
+			$tools->inject($tools_comment_btn);
 
 			$row->inject($main);
 			$row->inject($tools);
@@ -755,63 +771,109 @@ class NGIpublications {
 		return array('data' => array('total' => count($authors), 'matched' => $matched, 'added' => $added), 'errors' => $errors);
 	}
 
-
 	private function formatLog($log_list) {
-		$table=new htmlElement('table');
+		$table=new htmlElement('div');
 		$table->set('class','log');
-		$table_head=new htmlElement('thead');
-		$table_head_tr=new htmlElement('tr');
 
-		$table_head_th=new htmlElement('th');
-		$table_head_th->set('text', "User");
-		$table_head_tr->inject($table_head_th);
+		foreach(array_reverse($log_list) as $entry) {
+			$log_div = new htmlElement('div');
+			$log_div->set('class', 'log_item '.$entry['type']);
 
-		$table_head_th=new htmlElement('th');
-		$table_head_th->set('text', "Comment");
-		$table_head_tr->inject($table_head_th);
+			$log_user=new htmlElement('span');
+			$log_user->set('class', 'log_user');
+			$user_name = substr($entry['user_email'], 0, strpos($entry['user_email'], "@"));
+			$user_name = str_replace("."," ",$user_name);
+			$user_name = ucwords($user_name);
+			$log_user->set('text', $user_name);
 
-		$table_head_th=new htmlElement('th');
-		$table_head_th->set('text', "Type");
-		$table_head_tr->inject($table_head_th);
+			$log_timestamp=new htmlElement('span');
+			$log_timestamp->set('class', 'log_timestamp');
+			$log_timestamp->set('text', gmdate('Y-m-d H:i:s', $entry['timestamp']));
 
-		$table_head_th=new htmlElement('th');
-		$table_head_th->set('text', "Status set");
-		$table_head_tr->inject($table_head_th);
+ 			if ($entry['type'] == 'status_updated') {
+				$log_status_change = new htmlElement('span');
+				$log_status_icon = new htmlElement('i');
+				switch($entry['status_set']){
+					case 'verified':
+						$log_status_icon->set('class', "fi-target");
+					break;
+					case 'maybe':
+						$log_status_icon->set('class', "fi-alert");
+					break;
+					case 'discarded':
+						$log_status_icon->set('class', "fi-prohibited");
+					break;
+				}
+				$log_status_title = new htmlElement('span');
+				if ($entry['status_set'] == 'maybe') {
+					$log_status_title->set('text', $entry['status_set']." set by ");
+				} else {
+					$log_status_title->set('text', $entry['status_set']." by ");
+				}
 
-		$table_head_th=new htmlElement('th');
-		$table_head_th->set('text', "Timestamp");
-		$table_head_tr->inject($table_head_th);
+				$log_user_timestamp = new htmlElement('span');
+				$log_user_timestamp->inject($log_user);
+				$log_user_timestamp->inject($log_timestamp);
 
-		$table_head->inject($table_head_tr);
-		$table->inject($table_head);
+				$log_status_change->inject($log_status_icon);
+				$log_status_change->inject($log_status_title);
+				$log_status_change->inject($log_user_timestamp);
 
-		$table_body=new htmlElement('tbody');
 
-		foreach($log_list as $entry) {
-			$log_item=new htmlElement('tr');
-			$log_item_td = new htmlElement('td');
-			$log_item_td->set('text', $entry['user_email']);
-			$log_item->inject($log_item_td);
-			$log_item_td = new htmlElement('td');
-			$log_item_td->set('text', $entry['comment']);
-			$log_item->inject($log_item_td);
-			$log_item_td = new htmlElement('td');
-			$log_item_td->set('text', $entry['type']);
-			$log_item->inject($log_item_td);
-			$log_item_td = new htmlElement('td');
-			$log_item_td->set('text', $entry['status_set']);
-			$log_item->inject($log_item_td);
-			$log_item_td = new htmlElement('td');
-			$log_item_td->set('text', gmdate('Y-m-d H:i:s', $entry['timestamp']));
+				$log_div->inject($log_status_change);
+			}
 
-			$log_item->inject($log_item_td);
+			if (in_array($entry['type'], ['comment', 'status_updated'])) {
 
-			$table_body->inject($log_item);
+				if($entry['type'] == 'comment'){
+					$log_header = new htmlElement('div');
+
+					$log_header->inject($log_user);
+					$log_header->inject($log_timestamp);
+
+					$log_div->inject($log_header);
+				}
+				if ($entry['comment'] != ''){
+					$log_comment=new htmlElement('div');
+					$log_comment->set('class', 'log_comment');
+					$log_comment->set('text', $entry['comment']);
+
+					$log_div->inject($log_comment);
+				}
+
+			}
+
+			if (in_array($entry['type'], ['added', 'reserved'])) {
+				$log_div->set('class', 'log_item status_update '.$entry['type']);
+
+				$log_header = new htmlElement('span');
+				$log_header->set('class', 'log_status_update');
+				$log_text = '';
+				if($entry['type'] == 'reserved') {
+					$log_text .= 'Reserved by '.$user_name;
+				}
+				$log_text .= $entry['comment'];
+
+				$log_header->set('text', $log_text);
+
+				$log_header->inject($log_timestamp);
+
+				$log_div->inject($log_header);
+			}
+
+			// else {
+			// 	$log_header = new htmlElement('pre');
+			// 	$log_header->set('text', print_r($entry, true));
+			// 	$log_div->inject($log_header);
+			// }
+			$table->inject($log_div);
 		}
-		$table->inject($table_body);
-		return $table->Output();
+
+
+		return $table;
 
 	}
+
 
 	private function addLog($publication_id,$status,$message,$type) {
 		global $USER;
