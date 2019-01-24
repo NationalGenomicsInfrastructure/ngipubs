@@ -774,7 +774,7 @@ class NGIpublications {
 
 	private function authorMatch($author1, $author2) {
 		/* A fuzzy comparison of author names. Can lead to false positives! */
-		$both_are_ascii = (mb_check_encoding($author1, 'ASCII') && mb_check_encoding($author2, 'ASCII'));
+		$both_are_ascii = ($this->isAscii($author1) && $this->isAscii($author2));
 
 		if ((!$both_are_ascii)) {
 			$author1 = $this->normalize($author1);
@@ -801,6 +801,10 @@ class NGIpublications {
 		} else {
 			return false;
 		}
+	}
+
+	function isAscii($str) {
+		return 0 == preg_match('/[^\x00-\x7F]/', $str);
 	}
 
 	function normalize ($string) {
