@@ -13,7 +13,7 @@ if($USER->auth>0) {
 	$user_score_total_table=new htmlTable();
 	$user_score_total_table->addData($user_score_total);
 
-	$score_total=$publications->getScoreboard(FALSE,FALSE);
+	$score_total=$publications->getScoreboard($year,FALSE);
 	$score_total_table=new htmlTable();
 	$score_total_table->addData($score_total);
 } else {

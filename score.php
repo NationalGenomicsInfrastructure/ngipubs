@@ -3,7 +3,8 @@ require 'lib/global.php';
 $publications=new NGIpublications();
 
 if($USER->auth>0) {
-	$publist=sql_query("SELECT * FROM publications WHERE pubdate>='2018-01-01' AND pubdate<='2018-12-31'");
+	$year=$CONFIG['publications']['current_year']
+	$publist=sql_query("SELECT * FROM publications WHERE pubdate>=$year'-01-01' AND pubdate<=$year'-12-31'");
 	while($pubdata=$publist->fetch_assoc()) {
 		$publications->scorePublication($pubdata['id']);
 	}
