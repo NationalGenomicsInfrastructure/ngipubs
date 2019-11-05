@@ -72,7 +72,7 @@ if($USER->auth>0) {
 	<div class="large-12 columns">
 		<div class="card">
 			<div class="card-divider">
-				Global scoreboard
+				Global scoreboard for <?php echo $year; ?>
 			</div>
 			<div class="card-section">
 				<?php echo $score_total_table->render(); ?>
