@@ -51,6 +51,19 @@ class NGIpublications {
 		}
 	}
 
+	public function remainingPublications($year, $score=8) {
+		global $DB;
+		$pending=sql_fetch("SELECT COUNT(*) FROM publications p WHERE p.pubdate>='$year-01-01' AND p.status is NULL AND p.score >= $score;");
+		$maybe=sql_fetch("SELECT COUNT(*) FROM publications p WHERE p.pubdate>='$year-01-01' AND p.status='maybe' AND p.score >= $score;");
+		if($pending and $maybe) {
+			$pc = $pending["COUNT(*)"]; $mc = $maybe["COUNT(*)"];
+			return array("pending" => $pc, "maybe" => $mc, "total" => $pc+$mc);
+		} else {
+			return FALSE;
+		}
+	}
+
+
 	// $article is an array with PubMed eSummary data from the PHPMed class
 	public function addPublication($article,$lab_data=FALSE) {
 		global $DB;
@@ -327,7 +340,8 @@ class NGIpublications {
 	// Each user will get a list of publications selected randomly from unverified and 'maybe'
 	// When the list has been finished a new will be generated.
 	// User must verify all records, use 'maybe' if unsure, before a new one is generated
-	public function reservePublications($user_email,$year,$score=5,$limit=10) {
+	public function reservePublications($user_email,$year,$score=5,$limit=10,$lifehours=12) {
+		$lifeseconds = $lifehours * 60 * 60;
 		if($user_email=filter_var($user_email,FILTER_VALIDATE_EMAIL)) {
 			$year=filter_var($year,FILTER_VALIDATE_INT);
 			$score=filter_var($score,FILTER_VALIDATE_INT);
@@ -346,7 +360,7 @@ class NGIpublications {
 							pubdate<='$year-12-31' AND
 							score>='$score' AND
 							(status IS NULL OR status='maybe') AND
-							reservation_user IS NULL
+							(reservation_user IS NULL OR ($timestamp - reservation_timestamp) > $lifeseconds)
 						ORDER BY RAND() LIMIT $limit");
 					// Update log on the reserved papers
 					if($updated=sql_query("SELECT * FROM publications WHERE reservation_user='$user_email' AND reservation_timestamp=$timestamp")) {
