@@ -16,6 +16,8 @@ if($USER->auth>0) {
 	$score_total=$publications->getScoreboard($year,FALSE);
 	$score_total_table=new htmlTable();
 	$score_total_table->addData($score_total);
+
+	$remaining_publications=$publications->remainingPublications($year, 8);
 } else {
 	// Not logged in
 	header('Location:login.php');
@@ -40,51 +42,64 @@ if($USER->auth>0) {
 
 <body>
 <?php require '_menu.php'; ?>
-
-<div class="row">
-	<br>
-	<div class="large-6 columns">
-		<div class="card">
-			<div class="card-divider">
-				Your score for <?php echo $year; ?>
+	<div class="row">
+		<br>
+		<div class="large-12 columns">
+		<ul class="stats-list">
+			<li>
+				<?php echo $remaining_publications["total"]?> <span class="stats-list-label">Publications</span>
+			</li>
+			<li class="stats-list-maybe">
+				<?php echo $remaining_publications["maybe"]?> <span class="stats-list-label">Maybe</span>
+			</li>
+			<li class="stats-list-pending">
+				<?php echo $remaining_publications["pending"]?> <span class="stats-list-label">Pending</span>
+			</li>
+		</ul>
+		</div>
+	</div>
+	<div class="row">
+		<div class="large-6 columns">
+			<div class="card">
+				<div class="card-divider">
+					Your score for <?php echo $year; ?>
+				</div>
+				<div class="card-section">
+					<?php echo $user_score_table->render(); ?>
+					<a href="publications_verify.php" class="button">Go get some!</a>
+				</div>
 			</div>
-			<div class="card-section">
-				<?php echo $user_score_table->render(); ?>
-				<a href="publications_verify.php" class="button">Go get some!</a>
+		</div>
+		<div class="large-6 columns">
+			<div class="card">
+				<div class="card-divider">
+					Your total score
+				</div>
+				<div class="card-section">
+					<?php echo $user_score_total_table->render(); ?>
+				</div>
 			</div>
 		</div>
 	</div>
 
-	<div class="large-6 columns">
-		<div class="card">
-			<div class="card-divider">
-				Your total score
-			</div>
-			<div class="card-section">
-				<?php echo $user_score_total_table->render(); ?>
-			</div>
-		</div>
-	</div>
-</div>
-
-<div class="row">
-	<br>
-	<div class="large-12 columns">
-		<div class="card">
-			<div class="card-divider">
-				Global scoreboard for <?php echo $year; ?>
-			</div>
-			<div class="card-section">
-				<?php echo $score_total_table->render(); ?>
+	<div class="row">
+		<br>
+		<div class="large-12 columns">
+			<div class="card">
+				<div class="card-divider">
+					Global scoreboard for <?php echo $year; ?>
+				</div>
+				<div class="card-section">
+					<?php echo $score_total_table->render(); ?>
+				</div>
 			</div>
 		</div>
 	</div>
-</div>
 
-<script src="js/vendor/jquery.js"></script>
-<script src="js/vendor/what-input.js"></script>
-<script src="js/vendor/foundation.js"></script>
-<script src="js/app.js"></script>
+	<script src="js/vendor/jquery.js"></script>
+	<script src="js/vendor/what-input.js"></script>
+	<script src="js/vendor/foundation.js"></script>
+	<script src="js/app.js"></script>
 </body>
 
 </html>
