@@ -641,8 +641,10 @@ class NGIpublications {
 					$fulltext_keywords->addAccordion($key,$mtext);
 				}
 				$fulltext->set('text','<strong>Managed to retrieve fulltext of this paper, see matched keywords in list below!</strong>'.$fulltext_keywords->render());
-			} else {
+			} elseif ($publication['fulltext']['status'] == "no") {
 				$fulltext->set('text','<strong>No matches in fulltext</strong>');
+			} else {
+				$fulltext->set('text','<strong>The script encountered an error when fetching the fulltext</strong>');
 			}
 
 
