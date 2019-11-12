@@ -52,7 +52,7 @@ if($USER->auth>0) {
 						} else {
 							$html .= "Could not reset the password";
 						}
-						$html .= "<button onclick='window.history.go(-1);'>Go back</button>";
+						$html .= "<button class='small button right' onclick='window.history.go(-1);'>Go back</button>";
 					}
 				} else {
 					// View specific user
