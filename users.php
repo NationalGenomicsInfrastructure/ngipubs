@@ -41,6 +41,19 @@ if($USER->auth>0) {
 						// Not authorized
 						header('Location:users.php');
 					}
+			  } elseif($_GET['action']=='reset') {
+					// Reset password
+					// ================================================================================
+					// Only allow managers or admins to edit other users.
+					if($USER->data['uid']==$uid || $USER->auth>1) {
+
+						if($USER->resetPassword($userdata['user_email'])){
+							$html .= "<p>Password for ".$userdata['user_email']." is now reset. User needs to be confirmed again</p>";
+						} else {
+							$html .= "Could not reset the password";
+						}
+						$html .= "<button class='small button right' onclick='window.history.go(-1);'>Go back</button>";
+					}
 				} else {
 					// View specific user
 					// ================================================================================
@@ -53,9 +66,17 @@ if($USER->auth>0) {
 						$list->listItem("Role: ".$CONFIG['uservalidation']['roles'][$userdata['user_auth']]);
 						$list->listItem("Status: ".$CONFIG['uservalidation']['status'][$userdata['user_status']]);
 						$usercard->section($list->render());
-						$usercard->section('<a href="users.php?uid='.$USER->data['uid'].'&action=edit" class="button">Edit</a>');
+						if($userdata['user_auth'] == 0) {
+							$usercard->section("User confirmation link: ".$CONFIG['site']['url']."/confirm.php?code=".$userdata['user_hash']);
+						}
+						$usercard->section('
+						<div class="button-group">
+							<a href="users.php?uid='.$uid.'&action=edit" class="small button right">Edit</a>
+							<button onclick="var answer = confirm(\'Do you really want to reset the password for this user?\'); answer ? window.location.assign(\'users.php?uid='.$uid.'&action=reset\') : false;" class="small button right">Reset Password</button>
+						</div>
+						');
 						$html=$usercard->render();
-						
+
 						// Get log
 						$userlog=json_decode($userdata['log'],TRUE);
 						// Format log for table
@@ -84,7 +105,7 @@ if($USER->auth>0) {
 			$userlist=$USER->listUsers();
 			// Format data for table
 			foreach($userlist as $email => $userdata) {
-				if($USER->data['user_email']==$email || $user->auth>1) {
+				if($USER->data['user_email']==$email || $USER->auth>1) {
 					// Only allow managers or admins to edit other users
 					$row['email']='<a href="users.php?uid='.$userdata['uid'].'">'.$email.'</a>';
 				} else {

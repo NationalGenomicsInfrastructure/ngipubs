@@ -35,7 +35,7 @@ class Uservalidation {
 
 		$this->loginCheck();
 	}
-	
+
 	// login function is provided a hashed password directly from the browser (see uservalidation.js)
 	public function login($email,$hash) {
 		global $DB,$CONFIG;
@@ -82,15 +82,15 @@ class Uservalidation {
 			return FALSE;
 		}
 	}
-	
+
 	public function logout() {
 		$this->addLog($this->data['uid'],'info','Log out');
 		$this->destroySession();
 		$this->data=FALSE;
 		$this->auth=0;
 	}
-	
-	// Validate user session 
+
+	// Validate user session
 	private function loginCheck() {
 		if($user=$this->getUser($_SESSION['session_email'])) {
 			if(hash_equals(hash('sha512',$user['user_hash'].$_SERVER['HTTP_USER_AGENT']),$_SESSION['session_hash'])) {
@@ -109,7 +109,7 @@ class Uservalidation {
 			return FALSE;
 		}
 	}
-	
+
 	private function addLog($uid,$action,$message) {
 		global $DB;
 		if(trim($message)!="") {
@@ -123,9 +123,9 @@ class Uservalidation {
 						$log=array();
 					}
 					$log[]=array(
-						'timestamp'	=> time(), 
-						'ip'		=> $_SERVER['REMOTE_ADDR'], 
-						'action'	=> $action, 
+						'timestamp'	=> time(),
+						'ip'		=> $_SERVER['REMOTE_ADDR'],
+						'action'	=> $action,
 						'message'	=> $message
 					);
 					if($update=sql_query("UPDATE users SET log='".json_encode($log)."' WHERE uid=$uid LIMIT 1")) {
@@ -143,7 +143,7 @@ class Uservalidation {
 			return FALSE;
 		}
 	}
-	
+
 	// Get data for specific user (either by email, uid or hash)
 	public function getUser($string) {
 		global $DB;
@@ -157,17 +157,33 @@ class Uservalidation {
 		}
 		return $checkuser;
 	}
-	
+
+	// Reset password for users
+	public function resetPassword($email) {
+		global $DB,$CONFIG;
+		if($email) {
+			$email=$DB->real_escape_string($email);
+			// Check if user exist
+			if($this->getUser($email)) {
+				$hash=md5($email.time());
+				if($add=sql_query("UPDATE users SET user_hash='$hash', user_auth=0, user_status=1 WHERE user_email='$email'")) {
+					$uid=$DB->insert_id;
+					return TRUE;
+				} else { return FALSE; }
+			} else { return FALSE; }
+		} else { return FALSE; }
+	}
+
 	// Add a new user from signup form
 	public function addUser($email) {
 		global $DB,$CONFIG;
-		
+
 		if($CONFIG['uservalidation']['allowed']) {
 			$email=$this->isAllowed($email);
 		} else {
 			$email=filter_var($email,FILTER_VALIDATE_EMAIL);
 		}
-		
+
 		if($email) {
 			$email=$DB->real_escape_string($email);
 			// Check if user exist
@@ -177,7 +193,7 @@ class Uservalidation {
 				if($add=sql_query("INSERT INTO users SET user_email='$email', user_hash='$hash', user_auth=0, user_status=1")) {
 					$uid=$DB->insert_id;
 					$this->addLog($uid,'add','User added');
-	
+
 					// Send confirmation email
 					$confirm_url=$CONFIG['site']['url']."/confirm.php?code=$hash";
 					$subject='Registration at '.$CONFIG['site']['name'];
@@ -187,7 +203,7 @@ class Uservalidation {
 					} else {
 						$this->addLog($uid,'error','Confirmation email was not sent: '.$hash);
 					}
-					
+
 					return TRUE;
 				} else {
 					// Could not add user
@@ -202,7 +218,7 @@ class Uservalidation {
 			return FALSE;
 		}
 	}
-	
+
 	// Confirm a user who signed up, check the signup code and then replace it with the hashed password
 	public function confirmUser($code,$hash) {
 		global $DB,$CONFIG;
@@ -221,12 +237,12 @@ class Uservalidation {
 			return FALSE;
 		}
 	}
-	
+
 	// Update user information
 	// $data = $_POST or any array with keys that correspond with table field names
 	public function editUser($uid,$data) {
 		global $DB;
-		
+
 		// Clean input
 		foreach($data as $key => $value) {
 			$$key=$DB->real_escape_string($value);
@@ -241,15 +257,15 @@ class Uservalidation {
 					$updates[]=$key.'='.$$key;
 				}
 			}
-			
+
 			// Only updated if there were any changes
 			if(count($updates)) {
-				$update=sql_query("UPDATE users SET 
-					user_fname='$user_fname', 
-					user_lname='$user_lname', 
-					user_auth='$user_auth' 
+				$update=sql_query("UPDATE users SET
+					user_fname='$user_fname',
+					user_lname='$user_lname',
+					user_auth='$user_auth'
 					WHERE uid=$uid");
-				
+
 				if($update) {
 					// Great success!
 					$this->addLog($uid,'edit',implode(', ',$updates));
@@ -267,7 +283,7 @@ class Uservalidation {
 			return FALSE;
 		}
 	}
-	
+
 	public function listUsers() {
 		$query=sql_query('SELECT * FROM users');
 		if($query->num_rows>0) {
@@ -279,7 +295,7 @@ class Uservalidation {
 			return FALSE;
 		}
 	}
-	
+
 	// Check for brute force attacks, if a specfic emails have done more than 5 logins during the last hour the user will be blocked
 	private function checkBrute($email) {
 		global $DB;
@@ -293,16 +309,16 @@ class Uservalidation {
 			return FALSE;
 		}
 	}
-	
+
 	private function clearSession() {
 		// Unset all session variables related to user validation
 		unset($_SESSION['session_email']);
 		unset($_SESSION['session_hash']);
 	}
-	
+
 	private function destroySession() {
 		$this->clearSession();
-		
+
 		// If it's desired to kill the session, also delete the session cookie.
 		// Note: This will destroy the session, and not just the session data!
 		if(ini_get("session.use_cookies")) {
@@ -312,27 +328,27 @@ class Uservalidation {
 		        $params["secure"], $params["httponly"]
 		    );
 		}
-		
+
 		// Finally, destroy the session.
 		session_destroy();
 	}
-	
+
 	// --- Optional: check external source for list of allowed users (in this case StatusDB)
-		
+
 	// Get list of allowed users
 	// This function can be modified to retrieve users from any source, output must be an array with all allowed email adresses as values
 	private function getAllowedUsers() {
 		global $CONFIG;
 		$couch=new Couch($CONFIG['couch']['host'],$CONFIG['couch']['port'],$CONFIG['couch']['user'],$CONFIG['couch']['pass']);
 		$json=$couch->getView($CONFIG['couch']['views']['users']);
-	
+
 	    foreach($json->rows as $object) {
 		    $users[]=$object->key;
 	    }
-	
+
 	    return $users;
 	}
-	
+
 	// Check if email exists in list of allowed users
 	private function isAllowed($email) {
 		$users=$this->getAllowedUsers();
