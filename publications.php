@@ -1,7 +1,10 @@
 <?php
 require 'lib/global.php';
 
+
 if($USER->auth>0) {
+	global $CONFIG;
+	$config_year = $CONFIG['publications']['current_year'];
 	$publications=new NGIpublications();
 
 	$years=range(2010, date('Y')+1);
@@ -11,7 +14,7 @@ if($USER->auth>0) {
 
 	$filterform=new htmlForm("publications.php","get",4);
 	$filterform->addSelect("Status","status",array('all' => 'All', 'verified' => 'Verified', 'discarded' => 'Discarded', 'maybe' => 'Maybe', 'auto' => 'Auto', 'pending' => 'Pending'),$_GET);
-	$filterform->addSelect("Year","year",$years_select,$_GET);
+	$filterform->addSelect("Year","year",$years_select,  (empty($_GET) ? array($config_year => $config_year) : $_GET));
 	$filterform->addSelect("Order by","order_by",array('score' => 'Score', 'pubdate' => 'Publication date'),$_GET);
 	$filterform->addSelect("Sort","sort",array('desc' => 'Descending', 'asc' => 'Ascending'),$_GET);
 
@@ -86,6 +89,9 @@ if($USER->auth>0) {
 
 	if($year=filter_input(INPUT_GET,'year',FILTER_VALIDATE_INT,array('min_range' => 2000,'max_range' => 2100))) {
 		$filters[]="pubdate>='$year-01-01' AND pubdate<='$year-12-31'";
+	}
+	else {
+		$filters[]="pubdate>='$config_year-01-01' AND pubdate<='$config_year-12-31'";
 	}
 
 	if ($_GET['search_term']) {
