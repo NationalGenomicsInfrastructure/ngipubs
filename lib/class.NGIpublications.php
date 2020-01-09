@@ -169,12 +169,12 @@ class NGIpublications {
 						// Status already set
 						// If verified, note that it is also added
 						if ($local['pmid'][$pmid]=='verified') {
-							//$update=sql_query("UPDATE publications SET status='verified_and_added' WHERE pmid=$pmid");
-							$list['verified_and_added'][]=$pmid;
+							$update=sql_query("UPDATE publications SET status='auto' WHERE pmid=$pmid");
+							$list['auto'][]=$pmid;
 						} elseif ($local['pmid'][$pmid]=='discarded' || $local['pmid'][$pmid]=='maybe') {
 							// Report if matches with "discarded" or "maybe"
 							$list['mismatch'][]=$pmid;
-						} elseif ($local['pmid'][$pmid]=='auto' || $local['pmid'][$pmid]=='verified_and_added') {
+						} elseif ($local['pmid'][$pmid]=='auto') {
 							$list['no_change'][]=$pmid;
 						} else {
 							$list['other_unknown_status'][] = $pmid;

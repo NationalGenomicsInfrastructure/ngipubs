@@ -231,8 +231,7 @@ $(document).ready(function() {
 				$("#sync_status_message").append(
 					'<div class="callout success"><ul>' +
 						'<li>' + json['total'] + ' papers fetched in total</li>' +
-						'<li>' + json['verified_and_added'] + ' papers were verified and also added.</li>' +
-						'<li>' + json['auto'] + ' papers were added but not verified (auto)</li>' +
+						'<li>' + json['auto'] + ' papers were added (auto)</li>' +
 						'<li>' + json['no_change'] + ' papers were already noted as auto or added in database</li></ul>' +
 					'</div>'
 				);
