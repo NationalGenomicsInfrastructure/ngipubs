@@ -90,7 +90,7 @@ if($USER->auth>0) {
 	if($year=filter_input(INPUT_GET,'year',FILTER_VALIDATE_INT,array('min_range' => 2000,'max_range' => 2100))) {
 		$filters[]="pubdate>='$year-01-01' AND pubdate<='$year-12-31'";
 	}
-	else {
+	elseif(empty($_GET['id'])) {
 		$filters[]="pubdate>='$config_year-01-01' AND pubdate<='$config_year-12-31'";
 	}
 
