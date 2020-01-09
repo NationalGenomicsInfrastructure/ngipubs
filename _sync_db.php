@@ -29,8 +29,7 @@ if($USER->auth>1) {
 	$errors[]='Not logged in';
 }
 
-echo json_encode(array('verified_and_added' => count($list['verified_and_added']),
-					   'missing' => count($list['missing']),
+echo json_encode(array('missing' => count($list['missing']),
 					   'mismatch' => $list['mismatch'],
 					   'auto' => count($list['auto']),
 					   'no_change' => count($list['no_change']),
