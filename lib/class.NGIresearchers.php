@@ -411,7 +411,7 @@ class NGIresearchers {
 			$lab=sql_fetch("SELECT * FROM labs WHERE lab_clarity_uri='$query' LIMIT 1");
 		} else {
 			if(filter_var($query, FILTER_VALIDATE_INT)) {
-				$lab_uri='https://genologics.scilifelab.se/api/v2/labs/'.$query;
+				$lab_uri='https://ngi-lims-prod.scilifelab.se/api/v2/labs/'.$query;
 				$lab=sql_fetch("SELECT * FROM labs WHERE lab_clarity_uri='$lab_uri' LIMIT 1");
 			} else {
 				$lab=sql_fetch("SELECT * FROM labs WHERE lab_name='$query' LIMIT 1");
