@@ -105,7 +105,6 @@ if($USER->auth>0) {
 <?php require '_menu.php'; ?>
 
 <div class="row">
-	<br>
 	<div class="large-12 columns">
 		<?php echo $filterform->render(); ?>
 	</div>
